@@ -4,7 +4,11 @@ namespace Vosiz\Enums;
 
 class EnumException extends \Exception {
 
-    public function __construct($msg) {
+    /**
+     * Basic constructor
+     * @param string $msg message
+     */
+    public function __construct(string $msg) {
 
         return parent::__construct($msg);
     }

@@ -9,16 +9,23 @@ require_once(__DIR__.'/exc.php');
 
 abstract class Enum implements IEnum {
 
-    private static $Values; // collection of collections
+    private static $Values; // enum containers
 
-
+    /**
+     * IEnum required
+     * @return Vosiz\Utils\Collections\Collection enumerations so far defined
+     */
     public static function GetValues(): Collection {
 
         $enum = self::GetEnumCollection();
-
         return $enum;
     }
 
+    /**
+     * Gets enum - value
+     * @param string $enum_key key
+     * @return int enum value
+     */
     public static function GetEnum(string $enum_key) {
 
         $enum = self::GetEnumCollection();
@@ -35,7 +42,11 @@ abstract class Enum implements IEnum {
         return $val;
     }
 
-
+    /**
+     * Add values to enum container
+     * @param array $values values to add
+     * @throws EnumException
+     */
     public static function AddValues(array $values = array()) {
 
         $enum = self::GetEnumCollection();
@@ -58,13 +69,22 @@ abstract class Enum implements IEnum {
         }
     }
 
+    /**
+     * Add value to enum container
+     * @param Vosiz\Utils\Collections\Collection enumeration container
+     * @param string $key key
+     * @param int $value value
+     */
     public static function AddValue(Collection &$enum, string $key, int $value) {
 
         $enum->Add($value, $key);
     }
 
-
-    // chlivek, not enum
+    /**
+     * Get enum collection/container
+     * @param bool $strict if true will throw exception on not found, else will try to add new
+     * @return Vosiz\Utils\Collections\Collection
+     */
     protected static function GetEnumCollection(bool $strict = false) {
 
         // checking values
