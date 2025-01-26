@@ -1,0 +1,16 @@
+{
+    "name": "vosiz/php-enum",
+    "description": "PHP simple enum-like class",
+    "type": "library",
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "autoload": {
+        "psr-4": {
+            "Vosiz\\Enum\\": "src/"
+        }
+    },
+    "require": {
+        "php": ">=7.4",
+        "vosiz/php-utils": ">=1.1.1"
+    }
+}
