@@ -6,11 +6,11 @@
     "minimum-stability": "stable",
     "autoload": {
         "psr-4": {
-            "Vosiz\\Enum\\": "src/"
+            "Vosiz\\Enums\\": "src/"
         }
     },
     "require": {
         "php": ">=7.4",
-        "vosiz/php-utils": ">=1.1.1"
+        "vosiz/php-utils": ">=1.1.3"
     }
 }
