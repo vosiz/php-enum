@@ -42,16 +42,35 @@ class Elements extends Enum {
 ```
 
 > [!IMPORTANT]
-> You can multiple same values allocated to diferent keys (as some classic enum does not allow it) - here it is permited.
+> You can multiple same values allocated to diferent keys (as some classic enum does not allow it) - here it is permitted. But you can lose consistency if you base on integers (values) too much.
 
-Now you can simply use it for example like this.
+### Usage sample - int-like
+Now you can simply use it for example like this. It is value based - integers.
 ```php
 $elements = Elements::GetValues(); // all enum values - foreach usage f.e.
 
-$armor->ResistanceType = Elements::GetEnum('Fire'); // allocate enum variable
+$armor->ResistanceType = Elements::GetEnumVal('Fire'); // allocate enum variable
 
-if($armor->ResistanceType == Elements::GetEnum('Water');) { // comparation
+if($armor->ResistanceType == Elements::GetEnumVal('Water');) { // comparation
     
     ...
 }
+```
+
+### Usage sample - enum-like
+If you need to track or operate with naming of enum (enum key and value in general), you should use something like this:
+
+```php
+$enum = Elements::GetEnum('Earth');
+
+// access key or value
+$key = $enum->GetKey(); // alt GetName()
+$val = $enum->GetValue();
+
+// compare
+$is_water = $enum->Compare(Elements::GetEnum('Water'));
+
+// i fyou know value but not name
+$what_is_the_key = Elements::Find('Air'); 
+
 ```

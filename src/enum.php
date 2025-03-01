@@ -9,7 +9,24 @@ require_once(__DIR__.'/exc.php');
 
 abstract class Enum implements IEnum {
 
-    private static $Values; // enum containers
+    private static $Values; // Enum containers
+
+    private $Value;     public function GetValue()  { return $this->Value;  }
+    private $Key;       public function GetKey()    { return $this->Key;    }
+    private $EnumType;  public function GetType()   { return $this->EnumType;   }
+
+    /**
+     * Constructor
+     * @param string $key name of enum
+     * @param int $value value of enum
+     * @param string $type classname of enum
+     */
+    public function __construct(string $key, int $value, string $type) {
+
+        $this->Value = $value;
+        $this->Key = $key;
+        $this->EnumType = $type;
+    }
 
     /**
      * IEnum required
@@ -17,94 +34,147 @@ abstract class Enum implements IEnum {
      */
     public static function GetValues(): Collection {
 
-        $enum = self::GetEnumCollection();
-        return $enum;
+        return self::GetEnumCollection();
     }
 
     /**
-     * Gets enum - value
-     * @param string $enum_key key
-     * @return int enum value
+     * Gets an enum instance by name
+     * @param string $name enum name/key
+     * @return Enum
+     * @throws EnumException
      */
-    public static function GetEnum(string $enum_key) {
+    public static function GetEnum(string $name) {
 
         $enum = self::GetEnumCollection();
-        $class = static::class;
-        if($enum->IsEmpty()) {
+        $class = self::GetEnumType();
+
+        if ($enum->IsEmpty()) {
             $class::Init();
         }
 
-        $enum_key = str_camel($enum_key);
-        $val = $enum->{$enum_key};
-        if($val === NULL)
-            throw new EnumException("$enum_key was not found in enum $class");
+        $name = str_camel($name);
+        if (!$enum->HasKey($name)) {
+            throw new EnumException("Cannot get enum $name from $class");
+        }
 
-        return $val;
+        return $enum->$name;
+    }
+
+    /**
+     * Gets enum value by key
+     * @param string $enum_key
+     * @return int
+     */
+    public static function GetEnumVal(string $enum_key) {
+
+        $enum = self::GetEnum($enum_key);
+        return $enum->GetValue();
     }
 
     /**
      * Add values to enum container
-     * @param array $values values to add
+     * @param array $values assoc array
      * @throws EnumException
      */
-    public static function AddValues(array $values = array()) {
+    public static function AddValues(array $values = []) {
 
         $enum = self::GetEnumCollection();
 
-        foreach($values as $k => $v) {
+        foreach ($values as $k => $v) {
 
-            // check value
-            if(!is_numeric($v)) {
-
-                throw new EnumException("Value add failed: $v is not a integer");
+            if (!is_numeric($v)) {
+                throw new EnumException("Value add failed: $v is not an integer");
             }
 
-            // check key
-            if(!is_string($k)) {
-
+            if (!is_string($k)) {
                 throw new EnumException("Value add failed: $k is not a string");
             }
 
-            self::AddValue($enum, $k, $v);
+            self::AddValue($enum, $k, (int)$v);
         }
     }
 
     /**
-     * Add value to enum container
-     * @param Vosiz\Utils\Collections\Collection enumeration container
-     * @param string $key key
-     * @param int $value value
+     * Add single value to enum container
+     * @param Collection $enum enum collection
+     * @param string $key name of enum
+     * @param int $value value of enum
      */
     public static function AddValue(Collection &$enum, string $key, int $value) {
 
-        $enum->Add($value, $key);
+        $class = self::GetEnumType();
+        $e = new $class($key, $value, $class);
+        $enum->Add($e, $key);
+    }
+
+    /**
+     * Finds first enum by value
+     * @param int $value value to find
+     * @return Enum|null if exists
+     */
+    public static function Find(int $value) {
+
+        $enum = self::GetEnumCollection();
+        foreach ($enum->ToArray() as $key => $e) {
+ 
+            if ($e->GetValue() === $value) {
+
+                return $e;
+            }
+        }
+        
+        return null;
     }
 
     /**
      * Get enum collection/container
-     * @param bool $strict if true will throw exception on not found, else will try to add new
-     * @return Vosiz\Utils\Collections\Collection
+     * @param bool $strict leave at false
+     * @return Collection
+     * @throws EnumException
      */
     protected static function GetEnumCollection(bool $strict = false) {
 
-        // checking values
-        if(self::$Values === NULL) {
+        if (self::$Values === null) {
             self::$Values = new Collection();
         }
 
-        $name = str_camel(static::class);
+        $name = static::GetEnumType();
 
-        // checking if exists
-        if(!self::$Values->HasKey($name)) {
-
-            if($strict)
+        if (!self::$Values->HasKey($name)) {
+            if ($strict) {
                 throw new EnumException("GetEnum failed, key not found");
-
+            }
             self::$Values->Add(new Collection(), $name);
-            self::GetEnumCollection(true); // try one more time
         }
 
-        $enum = self::$Values->{$name};
-        return $enum;
+        return self::$Values->{$name};
+    }
+
+    /**
+     * Gets name of current enum
+     * @return string class name of current enum
+     */
+    protected static function GetEnumType() {
+
+        return str_camel(static::class);
+    }
+
+    /**
+     * Compares value to enum
+     * @param Enum $enum
+     * @return bool true if same
+     */
+    public function Compare(Enum $enum) {
+
+        return $enum->GetValue() == $this->Value;
+    }
+
+    /**
+     * Alias for GetKey
+     * @return string
+     */
+    public function GetName() {
+
+        return $this->GetKey();
     }
 }

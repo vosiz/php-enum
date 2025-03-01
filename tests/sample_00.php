@@ -31,7 +31,7 @@ class User {
         return $this->Roles;
     }
 
-    private function AddRole(Enum $role) {
+    private function AddRole(RoleEnum $role) {
 
         $this->Roles->Add($role);
     }
@@ -41,7 +41,7 @@ class User {
 function EnumTest_SetAndGetEnums() {
 
     $user = new User();
-    $admin = RoleEnum::GetEnum('admin');
+    $admin = RoleEnum::GetEnumVal('admin');
 
     return $admin;
 }
@@ -49,7 +49,7 @@ function EnumTest_SetAndGetEnums() {
 function EnumTest_CompareExpl() {
 
     $user = new User();
-    $admin = RoleEnum::GetEnum('admin');
+    $admin = RoleEnum::GetEnumVal('admin');
 
-    return $admin == RoleEnum::GetEnum('user');
+    return $admin == RoleEnum::GetEnumVal('user');
 }
