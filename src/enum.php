@@ -85,12 +85,12 @@ abstract class Enum implements IEnum {
         $collection = self::GetEnumCollection();
         $class = self::GetEnumType();
 
-        if ($enum->IsEmpty()) {
+        if ($collection->IsEmpty()) {
             $class::Init();
         }
 
         $name = str_camel($name);
-        if (!$enum->HasKey($name)) {
+        if (!$collection->HasKey($name)) {
             throw new EnumException("Cannot get enum $name from $class");
         }
 
