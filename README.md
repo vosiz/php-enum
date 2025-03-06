@@ -72,5 +72,28 @@ $is_water = $enum->Compare(Elements::GetEnum('Water'));
 
 // i fyou know value but not name
 $what_is_the_key = Elements::Find('Air'); 
-
 ```
+
+### Useful tips
+If you want to distinct 'key' from 'sho key', there is Display property. It is automatically set to key, but you can set it up in custom enum definition.
+Example.
+
+```php
+class EdibleEnum extends Enum {
+
+    public static function Init(): void {
+
+        $vals = [
+            'apple'     => 0,
+            'leek'      => [100, 'pure poison'],
+            'peach'     => 69,
+            'pear'      => [1, 'apple relative'],
+
+        ];
+        self::AddValues($vals);
+    } 
+}
+```
+
+> [!IMPORTANT]
+> You have to still keep first value of array as int (core functionality of enum). 
