@@ -1,7 +1,7 @@
 <?php
 
 // TESTS
-// - 00 - enum vals
+// - 00 - enum vals (elements)
 require_once(__DIR__.'/sample_00.php');
 function Test00() {
 
@@ -12,7 +12,7 @@ function Test00() {
     var_dump($result);
 }
 
-// - 01 - enums
+// - 01 - enums (Log)
 require_once(__DIR__.'/sample_01.php');
 function Test01() {
 
@@ -26,5 +26,13 @@ function Test01() {
     var_dump($result);
 
     $result = EnumTest_EnumComp();
+    var_dump($result);
+}
+
+// - 02 - enums as strings (calibre)
+require_once(__DIR__.'/sample_02.php');
+function Test02() {
+
+    $result = EnumTest_Display();
     var_dump($result);
 }

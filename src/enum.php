@@ -11,22 +11,51 @@ abstract class Enum implements IEnum {
 
     private static $Values; // Enum containers
 
-    private $Value;     public function GetValue()  { return $this->Value;  }
-    private $Key;       public function GetKey()    { return $this->Key;    }
-    private $EnumType;  public function GetType()   { return $this->EnumType;   }
+    private $Value;     public function GetValue()      { return $this->Value;      }
+    private $Key;       public function GetKey()        { return $this->Key;        }
+    private $EnumType;  public function GetType()       { return $this->EnumType;   }
+    private $Display;   public function GetDisplay()    { return $this->Display;    }
 
     /**
      * Constructor
      * @param string $key name of enum
      * @param int $value value of enum
      * @param string $type classname of enum
+     * @param array $additional parameters
      */
-    public function __construct(string $key, int $value, string $type) {
+    public function __construct(string $key, int $value, string $type, array $pars = []) {
 
         $this->Value = $value;
         $this->Key = $key;
         $this->EnumType = $type;
+
+        $this->Display = $key;
+
+        // process pars
+        if(!empty($pars) && count($pars) == 1) {
+
+            try {
+
+                // pars format
+                // - [0]: (string) display
+                $index = 0;
+
+                // display
+                $display = $pars[$index++];
+                if(!is_string($display)) {
+
+                    throw new EnumException("Wrong parameter[display]: $display");
+                }
+                $this->Display = $display;
+
+            } catch (Exception $exc) {
+
+                throw $exc;
+            }
+
+        }
     }
+
 
     /**
      * IEnum required
@@ -34,7 +63,15 @@ abstract class Enum implements IEnum {
      */
     public static function GetValues(): Collection {
 
-        return self::GetEnumCollection();
+        $collection = self::GetEnumCollection();
+        if($collection->IsEmpty()) {
+            
+            $class = static::GetEnumType();
+            $class::Init();
+            $collection = self::GetEnumCollection();
+        }
+
+        return $collection;
     }
 
     /**
@@ -45,7 +82,7 @@ abstract class Enum implements IEnum {
      */
     public static function GetEnum(string $name) {
 
-        $enum = self::GetEnumCollection();
+        $collection = self::GetEnumCollection();
         $class = self::GetEnumType();
 
         if ($enum->IsEmpty()) {
@@ -57,7 +94,7 @@ abstract class Enum implements IEnum {
             throw new EnumException("Cannot get enum $name from $class");
         }
 
-        return $enum->$name;
+        return $collection->$name;
     }
 
     /**
@@ -73,24 +110,49 @@ abstract class Enum implements IEnum {
 
     /**
      * Add values to enum container
-     * @param array $values assoc array
+     * @param array $values assoc array, values can be arrays too
      * @throws EnumException
      */
     public static function AddValues(array $values = []) {
 
-        $enum = self::GetEnumCollection();
+        $collection = self::GetEnumCollection();
 
         foreach ($values as $k => $v) {
 
-            if (!is_numeric($v)) {
+            // additional parameters
+            $params = array();
+
+            // value check
+            if(is_array($v)) { // value can be array
+
+                if(count($v) != 2) {
+
+                    throw new EnumException("Unsupported value (found defective array)");    
+                }
+
+                $params = $v;       // value is array
+                $v = (int)$v[0];    // first param is value
+                unsetra($params, 0);// unset value parameter and reorder
+
+            } else if (!is_numeric($v)) { // value is number
+
                 throw new EnumException("Value add failed: $v is not an integer");
             }
 
+            // key check
             if (!is_string($k)) {
-                throw new EnumException("Value add failed: $k is not a string");
+
+                if(is_numeric($k)) {
+
+                    $k = (string)$k;
+
+                } else {
+
+                    throw new EnumException("Value add failed: $k is not a string");
+                }
             }
 
-            self::AddValue($enum, $k, (int)$v);
+            self::AddValue($collection, $k, (int)$v, $params);
         }
     }
 
@@ -99,11 +161,12 @@ abstract class Enum implements IEnum {
      * @param Collection $enum enum collection
      * @param string $key name of enum
      * @param int $value value of enum
+     * @param array $pars additional parameters
      */
-    public static function AddValue(Collection &$enum, string $key, int $value) {
+    public static function AddValue(Collection &$enum, string $key, int $value, array $pars) {
 
         $class = self::GetEnumType();
-        $e = new $class($key, $value, $class);
+        $e = new $class($key, $value, $class, $pars);
         $enum->Add($e, $key);
     }
 
@@ -127,6 +190,15 @@ abstract class Enum implements IEnum {
     }
 
     /**
+     * Alias for GetValues
+     * @return Collection
+     */
+    public static function GetAll() {
+
+        return self::GetValues();
+    }
+
+    /**
      * Get enum collection/container
      * @param bool $strict leave at false
      * @return Collection
@@ -134,7 +206,7 @@ abstract class Enum implements IEnum {
      */
     protected static function GetEnumCollection(bool $strict = false) {
 
-        if (self::$Values === null) {
+        if (self::$Values === null) { // total init, no enums at all
             self::$Values = new Collection();
         }
 
@@ -147,7 +219,8 @@ abstract class Enum implements IEnum {
             self::$Values->Add(new Collection(), $name);
         }
 
-        return self::$Values->{$name};
+        $collection = self::$Values->{$name};       
+        return $collection;
     }
 
     /**
@@ -158,6 +231,7 @@ abstract class Enum implements IEnum {
 
         return str_camel(static::class);
     }
+
 
     /**
      * Compares value to enum
@@ -177,4 +251,5 @@ abstract class Enum implements IEnum {
 
         return $this->GetKey();
     }
+
 }

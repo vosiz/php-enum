@@ -11,6 +11,6 @@
     },
     "require": {
         "php": ">=7.4",
-        "vosiz/php-utils": ">=1.1.4"
+        "vosiz/php-utils": ">=1.1.5"
     }
 }

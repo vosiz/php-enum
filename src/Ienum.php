@@ -14,6 +14,7 @@ interface IEnum {
 
     /** 
      * Get all enumeration values
+     * - solved in Enum class
     */
     public static function GetValues(): Collection;
 
