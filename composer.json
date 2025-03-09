@@ -9,6 +9,9 @@
             "Vosiz\\Enums\\": "src/"
         }
     },
+    "files": [
+        "src/enum.php"
+    ],
     "require": {
         "php": ">=7.4",
         "vosiz/php-utils": ">=1.1.5"
