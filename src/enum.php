@@ -56,6 +56,15 @@ abstract class Enum implements IEnum {
         }
     }
 
+    /**
+     * ToString override
+     */
+    public function __toString() {
+
+        return sprintf("%s[%s]=0x%04X (%s)",
+            typeof($this), tostr($this->Key), $this->Value, tostr($this->Value));
+    }
+
 
     /**
      * IEnum required
