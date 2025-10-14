@@ -1,6 +1,6 @@
 <?php
 
-use Vosiz\Utils\Collections\Collection as Collection;
+use Vosiz\Utils\Collections\Dictionary;
 use Vosiz\Enums\Enum;
 
 require_once(__DIR__.'/../src/enum.php');

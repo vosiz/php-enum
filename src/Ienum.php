@@ -2,8 +2,7 @@
 
 namespace Vosiz\Enums;
 
-// use Vosiz\Utils\Collections;
-use Vosiz\Utils\Collections\Collection as Collection;
+use Vosiz\Utils\Collections\Dictionary;
 
 interface IEnum {
 
@@ -16,6 +15,6 @@ interface IEnum {
      * Get all enumeration values
      * - solved in Enum class
     */
-    public static function GetValues(): Collection;
+    public static function GetValues(): Dictionary;
 
 }

@@ -2,7 +2,7 @@
 
 namespace Vosiz\Enums;
 
-use Vosiz\Utils\Collections\Collection as Collection;
+use Vosiz\Utils\Collections\Dictionary;
 
 require_once(__DIR__.'/Ienum.php');
 require_once(__DIR__.'/exc.php');
@@ -68,9 +68,9 @@ abstract class Enum implements IEnum {
 
     /**
      * IEnum required
-     * @return Vosiz\Utils\Collections\Collection enumerations so far defined
+     * @return Vosiz\Utils\Collections\Dictionary enumerations so far defined
      */
-    public static function GetValues(): Collection {
+    public static function GetValues(): Dictionary {
 
         $collection = self::GetEnumCollection();
         if($collection->IsEmpty()) {
@@ -167,12 +167,12 @@ abstract class Enum implements IEnum {
 
     /**
      * Add single value to enum container
-     * @param Collection $enum enum collection
+     * @param Dictionary $enum enum collection
      * @param string $key name of enum
      * @param int $value value of enum
      * @param array $pars additional parameters
      */
-    public static function AddValue(Collection &$enum, string $key, int $value, array $pars) {
+    public static function AddValue(Dictionary &$enum, string $key, int $value, array $pars) {
 
         $class = self::GetEnumType();
         $e = new $class($key, $value, $class, $pars);
@@ -200,7 +200,7 @@ abstract class Enum implements IEnum {
 
     /**
      * Alias for GetValues
-     * @return Collection
+     * @return Dictionary
      */
     public static function GetAll() {
 
@@ -210,13 +210,13 @@ abstract class Enum implements IEnum {
     /**
      * Get enum collection/container
      * @param bool $strict leave at false
-     * @return Collection
+     * @return Dictionary
      * @throws EnumException
      */
     protected static function GetEnumCollection(bool $strict = false) {
 
         if (self::$Values === null) { // total init, no enums at all
-            self::$Values = new Collection();
+            self::$Values = new Dictionary();
         }
 
         $name = static::GetEnumType();
@@ -225,7 +225,7 @@ abstract class Enum implements IEnum {
             if ($strict) {
                 throw new EnumException("GetEnum failed, key not found");
             }
-            self::$Values->Add(new Collection(), $name);
+            self::$Values->Add(new Dictionary(), $name);
         }
 
         $collection = self::$Values->{$name};       

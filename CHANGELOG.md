@@ -1,9 +1,12 @@
 # Change log
 ## Current version
+### 2.3.0 - Collection
+- using Dictionaries
+
+## History
 ### 2.2.1 - ToString
 - more friendly __toString override
 
-## History
 ### 2.2.0 - Composer-autoload
 - core is loaded
 

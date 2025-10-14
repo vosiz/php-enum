@@ -1,6 +1,6 @@
 <?php
 
-use Vosiz\Utils\Collections\Collection as Collection;
+use Vosiz\Utils\Collections\Dictionary;
 use Vosiz\Enums\Enum;
 
 require_once(__DIR__.'/../src/enum.php');
@@ -23,7 +23,7 @@ class User {
 
     public function __construct() {
 
-        $this->Roles = new Collection();
+        $this->Roles = new Dictionary();
     } 
 
     public function GetRoles() {
