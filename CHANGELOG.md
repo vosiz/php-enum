@@ -1,9 +1,21 @@
 # Change log
 ## Current version
+### 2.4.0 - Big beautiful fix
+- Init — once per enum, values added before first read keep the preset ones
+- GetValues — returns a copy
+- Find — works before first read
+- Compare — enum type matters
+- AddValues — integer values only, existing key throws EnumException
+- enum class name taken as is
+- constructor is protected
+- requires php-utils 1.12
+- tests — PHPUnit, tests.sh
+- samples moved to samples/
+
+## History
 ### 2.3.0 - Collection
 - using Dictionaries
 
-## History
 ### 2.2.1 - ToString
 - more friendly __toString override
 
