@@ -9,7 +9,8 @@ require_once(__DIR__.'/exc.php');
 
 abstract class Enum implements IEnum {
 
-    private static $Values; // Enum containers
+    private static $Values = [];        // Enum containers, by enum class name
+    private static $Initialized = [];   // Enums with Init() already run, by enum class name
 
     private $Value;     public function GetValue()      { return $this->Value;      }
     private $Key;       public function GetKey()        { return $this->Key;        }
@@ -17,13 +18,14 @@ abstract class Enum implements IEnum {
     private $Display;   public function GetDisplay()    { return $this->Display;    }
 
     /**
-     * Constructor
+     * Constructor, enums are created only by AddValues/AddValue
      * @param string $key name of enum
      * @param int $value value of enum
      * @param string $type classname of enum
-     * @param array $additional parameters
+     * @param array $pars additional parameters
+     * @throws EnumException
      */
-    public function __construct(string $key, int $value, string $type, array $pars = []) {
+    protected function __construct(string $key, int $value, string $type, array $pars = []) {
 
         $this->Value = $value;
         $this->Key = $key;
@@ -32,27 +34,24 @@ abstract class Enum implements IEnum {
         $this->Display = $key;
 
         // process pars
-        if(!empty($pars) && count($pars) == 1) {
+        // pars format
+        // - [0]: (string) display
+        if(count($pars) > 1) {
 
-            try {
+            throw new EnumException("Too many parameters for $key: ".count($pars));
+        }
 
-                // pars format
-                // - [0]: (string) display
-                $index = 0;
+        if(!empty($pars)) {
 
-                // display
-                $display = $pars[$index++];
-                if(!is_string($display)) {
+            $index = 0;
 
-                    throw new EnumException("Wrong parameter[display]: $display");
-                }
-                $this->Display = $display;
+            // display
+            $display = $pars[$index++];
+            if(!is_string($display)) {
 
-            } catch (Exception $exc) {
-
-                throw $exc;
+                throw new EnumException("Wrong parameter[display]: ".tostr($display));
             }
-
+            $this->Display = $display;
         }
     }
 
@@ -68,19 +67,15 @@ abstract class Enum implements IEnum {
 
     /**
      * IEnum required
+     * - returns a copy, changing it does not change the enum
+     * - keys are camelized (my_key is held as MyKey), GetKey() of an enum keeps the key as written
      * @return Vosiz\Utils\Collections\Dictionary enumerations so far defined
      */
     public static function GetValues(): Dictionary {
 
-        $collection = self::GetEnumCollection();
-        if($collection->IsEmpty()) {
-            
-            $class = static::GetEnumType();
-            $class::Init();
-            $collection = self::GetEnumCollection();
-        }
+        self::EnsureInit();
 
-        return $collection;
+        return new Dictionary(self::GetEnumCollection()->ToArray());
     }
 
     /**
@@ -91,12 +86,10 @@ abstract class Enum implements IEnum {
      */
     public static function GetEnum(string $name) {
 
+        self::EnsureInit();
+
         $collection = self::GetEnumCollection();
         $class = self::GetEnumType();
-
-        if ($collection->IsEmpty()) {
-            $class::Init();
-        }
 
         $name = str_camel($name);
         if (!$collection->HasKey($name)) {
@@ -119,10 +112,15 @@ abstract class Enum implements IEnum {
 
     /**
      * Add values to enum container
+     * - values added from outside of Init() land after the preset ones
+     * - value is an integer or a string holding one, or array [value, display]
+     * - keys are camelized, my_key and MyKey are the same key
      * @param array $values assoc array, values can be arrays too
      * @throws EnumException
      */
     public static function AddValues(array $values = []) {
+
+        self::EnsureInit();
 
         $collection = self::GetEnumCollection();
 
@@ -140,12 +138,13 @@ abstract class Enum implements IEnum {
                 }
 
                 $params = $v;       // value is array
-                $v = (int)$v[0];    // first param is value
+                $v = $v[0] ?? NULL; // first param is value
                 unsetra($params, 0);// unset value parameter and reorder
+            }
 
-            } else if (!is_numeric($v)) { // value is number
+            if(!self::IsEnumValue($v)) {
 
-                throw new EnumException("Value add failed: $v is not an integer");
+                throw new EnumException("Value add failed: ".tostr($v)." (".gettype($v).") is not an integer or a string holding one");
             }
 
             // key check
@@ -171,10 +170,16 @@ abstract class Enum implements IEnum {
      * @param string $key name of enum
      * @param int $value value of enum
      * @param array $pars additional parameters
+     * @throws EnumException
      */
     public static function AddValue(Dictionary &$enum, string $key, int $value, array $pars) {
 
         $class = self::GetEnumType();
+        if($enum->HasKey($key)) {
+
+            throw new EnumException("Key $key is already registered in $class");
+        }
+
         $e = new $class($key, $value, $class, $pars);
         $enum->Add($e, $key);
     }
@@ -185,6 +190,8 @@ abstract class Enum implements IEnum {
      * @return Enum|null if exists
      */
     public static function Find(int $value) {
+
+        self::EnsureInit();
 
         $enum = self::GetEnumCollection();
         foreach ($enum->ToArray() as $key => $e) {
@@ -215,20 +222,16 @@ abstract class Enum implements IEnum {
      */
     protected static function GetEnumCollection(bool $strict = false) {
 
-        if (self::$Values === null) { // total init, no enums at all
-            self::$Values = new Dictionary();
-        }
-
         $name = static::GetEnumType();
 
-        if (!self::$Values->HasKey($name)) {
+        if (!isset(self::$Values[$name])) {
             if ($strict) {
                 throw new EnumException("GetEnum failed, key not found");
             }
-            self::$Values->Add(new Dictionary(), $name);
+            self::$Values[$name] = new Dictionary();
         }
 
-        $collection = self::$Values->{$name};       
+        $collection = self::$Values[$name];
         return $collection;
     }
 
@@ -238,23 +241,48 @@ abstract class Enum implements IEnum {
      */
     protected static function GetEnumType() {
 
-        return str_camel(static::class);
+        return static::class;
+    }
+
+    /**
+     * Runs Init() of current enum, once per enum class
+     */
+    protected static function EnsureInit() {
+
+        $class = static::GetEnumType();
+        if(isset(self::$Initialized[$class])) {
+
+            return;
+        }
+
+        self::$Initialized[$class] = true; // set before Init(), it adds values itself
+        $class::Init();
+    }
+
+    /**
+     * Checks if value can be used as enum value
+     * @param mixed $value
+     * @return bool true for integer or string holding one
+     */
+    protected static function IsEnumValue($value) {
+
+        return is_int($value) || (is_string($value) && preg_match('/^-?\d+$/D', $value) === 1);
     }
 
 
     /**
-     * Compares value to enum
+     * Compares enum to enum
      * @param Enum $enum
-     * @return bool true if same
+     * @return bool true if same enum type and same value
      */
     public function Compare(Enum $enum) {
 
-        return $enum->GetValue() == $this->Value;
+        return $enum->GetType() === $this->EnumType && $enum->GetValue() == $this->Value;
     }
 
     /**
      * Alias for GetKey
-     * @return string
+     * @return string key as written when added, not camelized
      */
     public function GetName() {
 
