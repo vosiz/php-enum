@@ -3,17 +3,28 @@
     "description": "PHP simple enum-like class",
     "type": "library",
     "license": "MIT",
+    "keywords": ["enum", "enums", "enumeration", "dynamic-enum", "csharp-style"],
     "minimum-stability": "stable",
     "autoload": {
         "psr-4": {
             "Vosiz\\Enums\\": "src/"
         },
         "files": [
+            "src/Ienum.php",
+            "src/exc.php",
             "src/enum.php"
         ]
     },
     "require": {
         "php": ">=7.4",
-        "vosiz/php-utils": ">=1.7.0"
+        "vosiz/php-utils": "~1.12.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6"
+    },
+    "config": {
+        "platform": {
+            "php": "7.4.33"
+        }
     }
 }
